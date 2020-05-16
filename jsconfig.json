@@ -1,0 +1,35 @@
+// 显式JS项目，表示该目录是JavaScript项目的根目录
+{
+  "include": [
+    "./src/**/*"
+  ],
+  "compilerOptions": {
+    "baseUrl": ".",
+    "paths": {
+      "@/api/*": [
+        "src/api/*"
+      ],
+      "@/assets/*": [
+        "src/assets/*"
+      ],
+      "@/components/*": [
+        "src/components/*"
+      ],
+      "@/plugins/*": [
+        "src/plugins/*"
+      ],
+      "@/router/*": [
+        "src/router/*"
+      ],
+      "@/store/*": [
+        "src/store/*"
+      ],
+      "@/utils/*": [
+        "src/utils/*"
+      ],
+      "@/views/*": [
+        "src/views/*"
+      ],
+    }
+  }
+}

@@ -1,32 +1,31 @@
 <template>
-  <div id="app">
-    <div id="nav">
-      <router-link to="/">Home</router-link> |
-      <router-link to="/about">About</router-link>
-    </div>
-    <router-view/>
-  </div>
+  <fragment>
+    <v-app dark>
+      <template v-if="!loadingData.active">
+        <router-view />
+      </template>
+      <template v-else>
+        <CenterLinearLoading :loadingData="this.loadingData"></CenterLinearLoading>
+      </template>
+    </v-app>
+  </fragment>
 </template>
 
-<style>
-#app {
-  font-family: Avenir, Helvetica, Arial, sans-serif;
-  -webkit-font-smoothing: antialiased;
-  -moz-osx-font-smoothing: grayscale;
-  text-align: center;
-  color: #2c3e50;
-}
+<script>
+import CenterLinearLoading from '@/components/common/loading/CenterLinearLoading'
 
-#nav {
-  padding: 30px;
-}
+export default {
+  name: 'App',
 
-#nav a {
-  font-weight: bold;
-  color: #2c3e50;
-}
+  components: {
+    CenterLinearLoading,
+  },
 
-#nav a.router-link-exact-active {
-  color: #42b983;
+  data: () => ({
+    loadingData: {
+      text: '正在加载应用数据...',
+      active: false,
+    },
+  }),
 }
-</style>
+</script>
