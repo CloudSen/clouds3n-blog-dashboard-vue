@@ -3,19 +3,9 @@
     app
     color="#6A76AB"
     dark
+    dense
     extension-height="0"
-    fade-img-on-scroll
-    prominent
-    scroll-threshold="500"
-    shrink-on-scroll
   >
-    <template v-slot:img="{ props }">
-      <v-img
-        gradient="to top right, rgba(100,115,201,.7), rgba(25,32,72,.7)"
-        v-bind="props"
-      ></v-img>
-    </template>
-
     <v-app-bar-nav-icon @click.stop="triggerDrawer"></v-app-bar-nav-icon>
 
     <v-toolbar-title>博客管理系统</v-toolbar-title>
