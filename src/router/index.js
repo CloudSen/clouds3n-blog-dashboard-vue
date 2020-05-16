@@ -24,7 +24,19 @@ const routes = [
         title: '看板',
         component: () => import('@/views/Dashboard'),
       },
+      {
+        path: 'article',
+        name: 'articleMgmt',
+        title: '文章管理',
+        component: () => import('@/views/ArticleMgmt'),
+      },
     ],
+  },
+  {
+    path: '*',
+    name: 'not_found_404',
+    title: 'not_found_404',
+    redirect: '/',
   },
 ]
 
