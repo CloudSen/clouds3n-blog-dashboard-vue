@@ -18,3 +18,8 @@ export default function dataTableOptionsToMybatisPage (options) {
     current: page,
   }
 }
+
+export function dataTableOptionsToPaginationDto (options, conditionList) {
+  const page = dataTableOptionsToMybatisPage(options)
+  return { page, conditionList }
+}

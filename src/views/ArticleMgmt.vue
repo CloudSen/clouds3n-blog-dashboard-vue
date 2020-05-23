@@ -33,7 +33,12 @@
                       color="primary"
                       dark
                       v-on="on"
-                    >新建文章</v-btn>
+                    >
+                      <v-icon
+                        class="mr-1"
+                        dark
+                      >add_circle</v-icon>新增
+                    </v-btn>
                   </template>
                   <v-card>
                     <v-card-title>
@@ -184,7 +189,9 @@
 </template>
 
 <script>
-import transferUtil from '@/utils/transferUtil'
+import { dataTableOptionsToPaginationDto } from '@/utils/transferUtil'
+import articleMgmtUrl from '@/api/articleMgmtUrl'
+import axios from '@/utils/axiosConfig'
 
 export default {
   name: 'article-mgmt',
@@ -239,6 +246,7 @@ export default {
       },
     ],
     options: {},
+    conditionList: [],
     loading: false,
     dialog: false,
     dialogDel: false,
@@ -264,7 +272,7 @@ export default {
   }),
   computed: {
     formTitle () {
-      return this.editedIndex === -1 ? '新建文章' : '编辑文章'
+      return this.editedIndex === -1 ? '新增' : '编辑'
     },
   },
   watch: {
@@ -281,7 +289,10 @@ export default {
     options: {
       handler (newOpt, oldOpt) {
         console.log(`new option: ${JSON.stringify(newOpt)}, old option: ${JSON.stringify(oldOpt)}`)
-        this.queryArticle()
+        this.queryArticle().then((data) => {
+          this.desserts = data.records
+          this.loading = false
+        }).catch((error) => console.error(`获取文章列表失败：${error}`))
       },
       deep: true,
     },
@@ -316,9 +327,11 @@ export default {
       this.desserts.splice(this.editedIndex, 1)
       this.close()
     },
-    queryArticle () {
-      const mpPage = transferUtil(this.options)
-      console.log(`mp page: ${JSON.stringify(mpPage)}`)
+    async queryArticle () {
+      this.loading = true
+      const conditionPage = dataTableOptionsToPaginationDto(this.options, this.conditionList)
+      const { data } = await axios.post(articleMgmtUrl.query.queryPage, conditionPage)
+      return data
     },
   },
 }
