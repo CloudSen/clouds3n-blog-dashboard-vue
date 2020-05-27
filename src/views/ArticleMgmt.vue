@@ -105,8 +105,23 @@
                           >
                             <v-text-field
                               label="卡片文字颜色"
-                              v-model="editedItem.textColor"
+                              v-model="editedItem.summaryTextColor"
                             ></v-text-field>
+                          </v-col>
+                          <v-col
+                            cols="12"
+                            md="4"
+                            sm="6"
+                          >
+                            <v-select
+                              :items="editedItem.tags"
+                              @change="onSelectTagChange"
+                              chips
+                              dense
+                              label="文章标签"
+                              multiple
+                              v-model="editedItem.selectedTags"
+                            ></v-select>
                           </v-col>
                           <v-col cols="12">
                             <v-textarea
@@ -252,22 +267,28 @@ export default {
     dialogDel: false,
     editedIndex: -1,
     editedItem: {
+      uuid: '',
       title: '',
       summary: '',
       imgUrlMd: '',
       imgUrl: '',
       color: '',
-      textColor: '',
+      summaryTextColor: '',
       content: '',
+      tags: [],
+      selectedTags: [],
     },
     defaultItem: {
+      uuid: '',
       title: '',
       summary: '',
       imgUrlMd: '',
       imgUrl: '',
       color: '',
-      textColor: '',
+      summaryTextColor: '',
       content: '',
+      tags: [],
+      selectedTags: [],
     },
   }),
   computed: {
@@ -299,20 +320,28 @@ export default {
   },
   methods: {
     editItem (item) {
+      const that = this
       this.editedIndex = this.desserts.indexOf(item)
-      this.editedItem = { ...item }
-      this.dialog = true
+      this.queryArticleDetail(item).then((data) => {
+        that.editedItem = { ...that.editedItem, ...data }
+        that.editedItem.tags.forEach((tag) => {
+          that.editedItem.selectedTags.push(tag.value)
+        })
+        that.dialog = true
+        that.loading = false
+      })
     },
     deleteItem (item) {
       this.editedIndex = this.desserts.indexOf(item)
       this.dialogDel = true
     },
     close () {
+      const that = this
       this.dialog = false
       this.dialogDel = false
       this.$nextTick(() => {
-        this.editedItem = { ...this.defaultItem }
-        this.editedIndex = -1
+        that.editedItem = JSON.parse(JSON.stringify(that.defaultItem))
+        that.editedIndex = -1
       })
     },
     save () {
@@ -327,10 +356,22 @@ export default {
       this.desserts.splice(this.editedIndex, 1)
       this.close()
     },
+    onSelectTagChange () {
+      console.info(`tag list: ${JSON.stringify(this.editedItem.tags)}`)
+      console.info(`selected tag list: ${JSON.stringify(this.editedItem.selectedTags)}`)
+    },
     async queryArticle () {
       this.loading = true
       const conditionPage = dataTableOptionsToPaginationDto(this.options, this.conditionList)
       const { data } = await axios.post(articleMgmtUrl.query.queryPage, conditionPage)
+      return data
+    },
+    async queryArticleDetail (item) {
+      this.loading = true
+      const { data } = await axios.get(`${articleMgmtUrl.query.getArticleDetail}${item.uuid}`)
+      const newTags = []
+      data.tags.forEach((tag) => newTags.push({ text: tag.name, value: tag.uuid }))
+      data.tags = newTags
       return data
     },
   },
