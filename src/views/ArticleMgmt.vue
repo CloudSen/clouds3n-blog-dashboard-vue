@@ -115,7 +115,9 @@
                           >
                             <v-select
                               :items="editedItem.tags"
+                              :loading="loadingTags"
                               @change="onSelectTagChange"
+                              @click="onSelectTagClick"
                               chips
                               dense
                               label="文章标签"
@@ -206,6 +208,8 @@
 <script>
 import { dataTableOptionsToPaginationDto } from '@/utils/transferUtil'
 import articleMgmtUrl from '@/api/articleMgmtUrl'
+import topicMgmtUrl from '@/api/topicMgmtUrl'
+import tagMgmtUrl from '@/api/tagMgmtUrl'
 import axios from '@/utils/axiosConfig'
 
 export default {
@@ -263,6 +267,8 @@ export default {
     options: {},
     conditionList: [],
     loading: false,
+    loadingTags: false,
+    loadingTopics: false,
     dialog: false,
     dialogDel: false,
     editedIndex: -1,
@@ -276,7 +282,9 @@ export default {
       summaryTextColor: '',
       content: '',
       tags: [],
+      topics: [],
       selectedTags: [],
+      selectedTopics: [],
     },
     defaultItem: {
       uuid: '',
@@ -288,7 +296,9 @@ export default {
       summaryTextColor: '',
       content: '',
       tags: [],
+      topics: [],
       selectedTags: [],
+      selectedTopics: [],
     },
   }),
   computed: {
@@ -322,11 +332,7 @@ export default {
     editItem (item) {
       const that = this
       this.editedIndex = this.desserts.indexOf(item)
-      this.queryArticleDetail(item).then((data) => {
-        that.editedItem = { ...that.editedItem, ...data }
-        that.editedItem.tags.forEach((tag) => {
-          that.editedItem.selectedTags.push(tag.value)
-        })
+      this.queryArticleDetail(item).then(() => {
         that.dialog = true
         that.loading = false
       })
@@ -360,6 +366,13 @@ export default {
       console.info(`tag list: ${JSON.stringify(this.editedItem.tags)}`)
       console.info(`selected tag list: ${JSON.stringify(this.editedItem.selectedTags)}`)
     },
+    onSelectTagClick () {
+      this.queryAllTag().then((data) => {
+        this.editedItem.tags = []
+        data.forEach((tag) => this.editedItem.tags.push({ text: tag.name, value: tag.uuid }))
+        this.loadingTags = false
+      })
+    },
     async queryArticle () {
       this.loading = true
       const conditionPage = dataTableOptionsToPaginationDto(this.options, this.conditionList)
@@ -368,10 +381,27 @@ export default {
     },
     async queryArticleDetail (item) {
       this.loading = true
+      const newAllTags = []
+      const newSelectedTags = []
+      const newSelectedTopics = []
+      const tagResult = await axios.get(tagMgmtUrl.query.getAllTagList)
+      tagResult.data.forEach((tag) => newAllTags.push({ text: tag.name, value: tag.uuid }))
       const { data } = await axios.get(`${articleMgmtUrl.query.getArticleDetail}${item.uuid}`)
-      const newTags = []
-      data.tags.forEach((tag) => newTags.push({ text: tag.name, value: tag.uuid }))
-      data.tags = newTags
+      data.tags.forEach((tag) => newSelectedTags.push({ text: tag.name, value: tag.uuid }))
+      data.topics.forEach((topic) => newSelectedTopics.push({ text: topic.topicName, value: topic.uuid }))
+      this.editedItem = { ...this.editedItem, ...data }
+      this.editedItem.tags = newAllTags
+      this.editedItem.selectedTags = newSelectedTags
+      this.editedItem.selectedTopics = newSelectedTopics
+    },
+    async queryAllTag () {
+      this.loadingTags = true
+      const { data } = await axios.get(tagMgmtUrl.query.getAllTagList)
+      return data
+    },
+    async querySubTopics () {
+      this.loadingTopics = true
+      const { data } = await axios.get(topicMgmtUrl.query.getSubTopicList)
       return data
     },
   },
@@ -380,3 +410,12 @@ export default {
 
 <style>
 </style>
+
+
+function consume(data) {
+  printf(data);
+}
+
+function forEach(consume, data) {
+  consume(data);
+}
