@@ -8,6 +8,7 @@
             :items="desserts"
             :loading="loading"
             :options.sync="options"
+            :server-items-length="totalDesserts"
             class="elevation-1"
             sort-by="createTime"
           >
@@ -116,7 +117,6 @@
                             <v-select
                               :items="editedItem.tags"
                               :loading="loadingTags"
-                              @change="onSelectTagChange"
                               @click="onSelectTagClick"
                               chips
                               dense
@@ -141,15 +141,17 @@
                     <v-card-actions>
                       <v-spacer></v-spacer>
                       <v-btn
+                        :loading="saveLoading"
                         @click="close"
                         color="blue darken-1"
                         text
                       >取消</v-btn>
                       <v-btn
+                        :loading="saveLoading"
                         @click="save"
                         color="blue darken-1"
                         text
-                      >确认</v-btn>
+                      >保存</v-btn>
                     </v-card-actions>
                   </v-card>
                 </v-dialog>
@@ -194,7 +196,7 @@
             </template>
             <template v-slot:no-data>
               <v-btn
-                @click="initialize"
+                @click="refresh"
                 color="primary"
               >刷新</v-btn>
             </template>
@@ -211,6 +213,7 @@ import articleMgmtUrl from '@/api/articleMgmtUrl'
 import topicMgmtUrl from '@/api/topicMgmtUrl'
 import tagMgmtUrl from '@/api/tagMgmtUrl'
 import axios from '@/utils/axiosConfig'
+import { parseCurrentDataTime } from '@/utils/dateTimeUtil'
 
 export default {
   name: 'article-mgmt',
@@ -239,36 +242,13 @@ export default {
       },
     ],
     desserts: [
-      {
-        uuid: '1',
-        title: 'Test1',
-        createTime: '2019-07-29',
-        updateTime: '2019-07-29',
-      },
-      {
-        uuid: '2',
-        title: 'Test2',
-        createTime: '2019-07-30',
-        updateTime: '2019-07-30',
-      },
-      {
-        uuid: '3',
-        title: 'Test3',
-        createTime: '2019-08-01',
-        updateTime: '2019-08-01',
-      },
-      {
-        uuid: '4',
-        title: 'Test4',
-        createTime: '2020-05-16',
-        updateTime: '2020-05-16',
-      },
     ],
     options: {},
     conditionList: [],
     loading: false,
     loadingTags: false,
     loadingTopics: false,
+    saveLoading: false,
     dialog: false,
     dialogDel: false,
     editedIndex: -1,
@@ -300,6 +280,8 @@ export default {
       selectedTags: [],
       selectedTopics: [],
     },
+    needDelItemId: '',
+    totalDesserts: 0,
   }),
   computed: {
     formTitle () {
@@ -320,15 +302,28 @@ export default {
     options: {
       handler (newOpt, oldOpt) {
         console.log(`new option: ${JSON.stringify(newOpt)}, old option: ${JSON.stringify(oldOpt)}`)
-        this.queryArticle().then((data) => {
-          this.desserts = data.records
-          this.loading = false
-        }).catch((error) => console.error(`获取文章列表失败：${error}`))
+        this.refresh()
       },
       deep: true,
     },
   },
   methods: {
+    reset () {
+      this.dialog = false
+      this.dialogDel = false
+      this.loading = false
+      this.loadingTags = false
+      this.loadingTopics = false
+      this.saveLoading = false
+      this.needDelItemId = ''
+    },
+    refresh () {
+      this.queryArticle().then((data) => {
+        this.desserts = data.records
+        this.totalDesserts = data.total
+        this.reset()
+      }).catch((error) => console.error(`获取文章列表失败：\n${error.msg}`))
+    },
     editItem (item) {
       const that = this
       this.editedIndex = this.desserts.indexOf(item)
@@ -340,31 +335,29 @@ export default {
     deleteItem (item) {
       this.editedIndex = this.desserts.indexOf(item)
       this.dialogDel = true
+      this.needDelItemId = item.uuid
     },
     close () {
       const that = this
-      this.dialog = false
-      this.dialogDel = false
+      this.reset()
       this.$nextTick(() => {
         that.editedItem = JSON.parse(JSON.stringify(that.defaultItem))
         that.editedIndex = -1
       })
     },
     save () {
-      if (this.editedIndex > -1) {
-        Object.assign(this.desserts[this.editedIndex], this.editedItem)
-      } else {
-        this.desserts.push(this.editedItem)
-      }
-      this.close()
+      this.modifyArticle().then(() => {
+        this.saveLoading = false
+        this.close()
+        this.refresh()
+      })
     },
     confirmDel () {
-      this.desserts.splice(this.editedIndex, 1)
-      this.close()
-    },
-    onSelectTagChange () {
-      console.info(`tag list: ${JSON.stringify(this.editedItem.tags)}`)
-      console.info(`selected tag list: ${JSON.stringify(this.editedItem.selectedTags)}`)
+      this.deleteArticle().then(() => {
+        this.close()
+        this.loading = true
+        this.refresh()
+      })
     },
     onSelectTagClick () {
       this.queryAllTag().then((data) => {
@@ -377,6 +370,11 @@ export default {
       this.loading = true
       const conditionPage = dataTableOptionsToPaginationDto(this.options, this.conditionList)
       const { data } = await axios.post(articleMgmtUrl.query.queryPage, conditionPage)
+      data.records.forEach((article) => {
+        const temp = article
+        temp.updateTime = parseCurrentDataTime(article.updateTime)
+        temp.createTime = parseCurrentDataTime(article.createTime)
+      })
       return data
     },
     async queryArticleDetail (item) {
@@ -387,8 +385,8 @@ export default {
       const tagResult = await axios.get(tagMgmtUrl.query.getAllTagList)
       tagResult.data.forEach((tag) => newAllTags.push({ text: tag.name, value: tag.uuid }))
       const { data } = await axios.get(`${articleMgmtUrl.query.getArticleDetail}${item.uuid}`)
-      data.tags.forEach((tag) => newSelectedTags.push({ text: tag.name, value: tag.uuid }))
-      data.topics.forEach((topic) => newSelectedTopics.push({ text: topic.topicName, value: topic.uuid }))
+      data.tags.forEach((tag) => newSelectedTags.push(tag.uuid))
+      data.topics.forEach((topic) => newSelectedTopics.push(topic.uuid))
       this.editedItem = { ...this.editedItem, ...data }
       this.editedItem.tags = newAllTags
       this.editedItem.selectedTags = newSelectedTags
@@ -404,18 +402,32 @@ export default {
       const { data } = await axios.get(topicMgmtUrl.query.getSubTopicList)
       return data
     },
+    async modifyArticle () {
+      this.saveLoading = true
+      const articleData = JSON.parse(JSON.stringify(this.editedItem))
+      const newTagList = []
+      const newTopicList = []
+      articleData.selectedTags.forEach((tagId) => {
+        newTagList.push({ uuid: tagId })
+      })
+      articleData.selectedTopics.forEach((topicId) => {
+        newTopicList.push({ uuid: topicId })
+      })
+      articleData.tags = newTagList
+      articleData.topics = newTopicList
+      await axios.post(articleMgmtUrl.modify.saveOrUpdate, articleData).catch((err) => {
+        console.error(JSON.stringify(err))
+      })
+    },
+    async deleteArticle () {
+      this.loading = true
+      await axios.delete(`${articleMgmtUrl.delete.deleteArticle}${this.needDelItemId}`).catch((err) => {
+        console.error(JSON.stringify(err))
+      })
+    },
   },
 }
 </script>
 
 <style>
 </style>
-
-
-function consume(data) {
-  printf(data);
-}
-
-function forEach(consume, data) {
-  consume(data);
-}

@@ -3,4 +3,10 @@ export default {
     queryPage: '/article/queryPage',
     getArticleDetail: '/article/',
   },
+  modify: {
+    saveOrUpdate: '/article',
+  },
+  delete: {
+    deleteArticle: '/article/',
+  },
 }

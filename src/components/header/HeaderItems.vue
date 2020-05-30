@@ -11,6 +11,7 @@
         <i
           class="material-icons mr-1"
           left
+          small
         >{{item.icon}}</i>
         {{item.name}}
       </v-btn>
