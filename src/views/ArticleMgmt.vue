@@ -143,10 +143,9 @@
                           </v-col>
                           <v-col cols="12">
                             <v-textarea
-                              auto-grow
                               label="文章内容"
                               placeholder="请写入MD风格的文章内容"
-                              rows="10"
+                              rows="20"
                               v-model="editedItem.content"
                             ></v-textarea>
                           </v-col>
