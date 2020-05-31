@@ -53,14 +53,14 @@ export default {
             },
             series: [
               {
-                name: '访问来源',
+                name: '总数',
                 type: 'pie',
                 radius: '55%',
                 center: ['50%', '50%'],
                 data: this.tagPieData,
                 roseType: 'radius',
                 label: {
-                  color: 'rgba(255, 255, 255, 0.3)',
+                  color: 'rgba(255, 255, 255, 0.5)',
                 },
                 labelLine: {
                   lineStyle: {

@@ -23,6 +23,14 @@
         >
           <TagPieCard></TagPieCard>
         </v-col>
+        <v-col
+          cols="12"
+          lg="6"
+          md="6"
+          xl="4"
+        >
+          <ArticleFreqLineCard></ArticleFreqLineCard>
+        </v-col>
       </v-row>
     </v-container>
   </fragment>
@@ -31,6 +39,7 @@
 <script>
 import CountCard from '@/components/main/dashboard/CountCard'
 import TagPieCard from '@/components/main/dashboard/TagPieCard'
+import ArticleFreqLineCard from '@/components/main/dashboard/ArticleFreqLineCard'
 import { mapState, mapMutations } from 'vuex'
 import monitorUrl from '@/api/monitorUrl'
 import axios from '@/utils/axiosConfig'
@@ -40,6 +49,7 @@ export default {
   components: {
     CountCard,
     TagPieCard,
+    ArticleFreqLineCard,
   },
   computed: {
     ...mapState('dashboard/', ['monitorCardList']),
