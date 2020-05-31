@@ -125,6 +125,22 @@
                               v-model="editedItem.selectedTags"
                             ></v-select>
                           </v-col>
+                          <v-col
+                            cols="12"
+                            md="4"
+                            sm="6"
+                          >
+                            <v-select
+                              :items="editedItem.topics"
+                              :loading="loadingTopics"
+                              @click="onSelectTopicClick"
+                              chips
+                              dense
+                              label="专题"
+                              multiple
+                              v-model="editedItem.selectedTopics"
+                            ></v-select>
+                          </v-col>
                           <v-col cols="12">
                             <v-textarea
                               auto-grow
@@ -366,6 +382,13 @@ export default {
         this.loadingTags = false
       })
     },
+    onSelectTopicClick () {
+      this.querySubTopics().then((data) => {
+        this.editedItem.topics = []
+        data.forEach((topic) => this.editedItem.topics.push({ text: topic.topicName, value: topic.uuid }))
+        this.loadingTopics = false
+      })
+    },
     async queryArticle () {
       this.loading = true
       const conditionPage = dataTableOptionsToPaginationDto(this.options, this.conditionList)
@@ -380,15 +403,19 @@ export default {
     async queryArticleDetail (item) {
       this.loading = true
       const newAllTags = []
+      const newSubTopics = []
       const newSelectedTags = []
       const newSelectedTopics = []
       const tagResult = await axios.get(tagMgmtUrl.query.getAllTagList)
+      const topicResult = await axios.get(topicMgmtUrl.query.getSubTopicList)
       tagResult.data.forEach((tag) => newAllTags.push({ text: tag.name, value: tag.uuid }))
+      topicResult.data.forEach((topic) => newSubTopics.push({ text: topic.topicName, value: topic.uuid }))
       const { data } = await axios.get(`${articleMgmtUrl.query.getArticleDetail}${item.uuid}`)
       data.tags.forEach((tag) => newSelectedTags.push(tag.uuid))
       data.topics.forEach((topic) => newSelectedTopics.push(topic.uuid))
       this.editedItem = { ...this.editedItem, ...data }
       this.editedItem.tags = newAllTags
+      this.editedItem.topics = newSubTopics
       this.editedItem.selectedTags = newSelectedTags
       this.editedItem.selectedTopics = newSelectedTopics
     },
