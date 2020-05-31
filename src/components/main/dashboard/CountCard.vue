@@ -2,6 +2,7 @@
   <fragment>
     <v-card
       :class="this.monitorCard.color"
+      :loading="loadingMonitorData"
       :to="this.monitorCard.url"
       elevation="5"
       exact
@@ -24,6 +25,8 @@
 </template>
 
 <script>
+import { mapState } from 'vuex'
+
 export default {
   name: 'dashboard-count-card',
   props: {
@@ -31,6 +34,9 @@ export default {
       type: Object,
       required: true,
     },
+  },
+  computed: {
+    ...mapState('dashboard/', ['loadingMonitorData']),
   },
 }
 </script>

@@ -1,4 +1,5 @@
 const state = {
+  loadingMonitorData: false,
   monitorCardList: [
     {
       type: 'article',
@@ -49,6 +50,8 @@ const state = {
       textColor: 'white--text',
     },
   ],
+  loadingTagPie: false,
+  tagPieData: [],
 }
 
 const getters = {}
@@ -60,6 +63,18 @@ const mutations = {
     const STATE = $state
     const foundIndex = STATE.monitorCardList.findIndex((monitorCard) => monitorCard.type === payload.type)
     STATE.monitorCardList[foundIndex].count = payload.count
+  },
+  updateTagPieData ($state, payload) {
+    const STATE = $state
+    STATE.tagPieData = payload
+  },
+  updateLoadingTagPie ($state, payload) {
+    const STATE = $state
+    STATE.loadingTagPie = payload
+  },
+  updateLoadingMonitorData ($state, payload) {
+    const STATE = $state
+    STATE.loadingMonitorData = payload
   },
 }
 
