@@ -20,7 +20,9 @@
 
 <script>
 import CountCard from '@/components/main/dashboard/CountCard'
-import { mapState } from 'vuex'
+import { mapState, mapMutations } from 'vuex'
+import monitorUrl from '@/api/monitorUrl'
+import axios from '@/utils/axiosConfig'
 
 export default {
   name: 'dashboarad',
@@ -29,6 +31,27 @@ export default {
   },
   computed: {
     ...mapState('dashboard/', ['monitorCardList']),
+  },
+  methods: {
+    ...mapMutations('dashboard/', ['updateMonitorCardList']),
+    init () {
+      const that = this
+      this.queryMonitorData().then((data) => {
+        const cardList = data
+        cardList.forEach((tempCard) => {
+          that.updateMonitorCardList(tempCard)
+        })
+      })
+    },
+    async queryMonitorData () {
+      const { data } = await axios.get(monitorUrl.query.getMonitorCardData).catch((err) => {
+        console.error(JSON.stringify(err))
+      })
+      return data
+    },
+  },
+  mounted () {
+    this.init()
   },
 }
 </script>
